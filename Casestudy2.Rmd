@@ -1,0 +1,594 @@
+---
+title: "CaseStudy2"
+author: "Nnenna Okpara"
+date: "4/4/2021"
+output:
+  html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+Presentation link:  https://youtu.be/qHn94j3YZvg
+
+#Executive Summary
+DDS Analytics is an analytics company that specializes in talent management solutions for Fortune 100 companies. DDS Analytics is tasked by Frito lay to analyze factors that lead to attrition. The Analysis involves identifying Job trends, identifying factors that lead to attrition, predicting Monthly Income using Job Role, Job level, Total working years. Also using the Native Model to predict attrition.
+
+
+#Factors that led to Attrition based on EDA were:
+
+Monthly Income
+Overtime
+Years in Current Role
+Job Role
+
+#Observations:
+Attrition is higher with employees that travel frequently
+There seems to be higher attrition rate in employees with Technical Degree and Human Resources
+There seems to be higher attrition rate in Sales Representative employees
+Attrition is common with male employees
+Attrition is likely with employees with <5 years in current role
+Attrition is  common with single employees
+Attrition is  common with employees who worked overtime
+It looks like Employees in their 30's have a higher attrition rate
+Sales Representatives have the lowest Monthly Income
+Sales Representatives have the lowest total working years <5years
+
+
+##Load Library
+```{r}
+library(ggplot2)
+library(viridis)
+library(naniar)
+library(tidyverse)
+library(GGally)
+library(plotly)
+library(dplyr)
+library(caret)
+library(class)
+library(e1071)
+library(stringr)
+```
+
+##Data import and manipulation
+```{r}
+data<- read.csv(file.choose(), header= TRUE)
+head(data)
+```
+
+
+##Check for missing data and look at the data
+```{r}
+DataMiss <- vis_miss(data)
+DataMiss
+miss_var_summary(data)
+
+
+head(data)
+view(data)
+str(data)
+```
+
+##EDA
+We will use EDA for visualization and to see the factors associated with attrition
+
+## A look at Categorical variables
+###BusinessTravel vs Attrition
+```{r}
+data %>% ggplot(aes(x=BusinessTravel, fill=Attrition)) + geom_bar(position="fill") +
+  scale_fill_viridis_d(begin=.20, end=.60) + xlab("Business Travel") +
+  ggtitle("Business Travel by Attrition")
+
+```
+##Attrition is higher with employees that travel frequently
+
+
+
+#Department vs Attrition
+```{r}
+data %>% ggplot(aes(x=Department,fill=Attrition)) + geom_bar(position="fill") +
+  scale_fill_viridis_d(begin=.20, end=.60) + xlab("Department") +
+  ggtitle("Department by Attrition")
+```
+
+
+#EducationField vs Attrition
+```{r}
+data %>% ggplot(aes(x=EducationField,fill=Attrition)) + geom_bar(position="fill") +
+  scale_fill_viridis_d(begin=.20, end=.60) + xlab("EducationField") +
+  ggtitle("EducationField by Attrition")
+
+```
+##There seems to be higher attrition rate in employees with Technical Degree and Human Resources
+
+
+#Gender vs Attrition
+```{r}
+data %>% ggplot(aes(x=Gender,fill=Attrition)) + geom_bar(position="fill") +
+  scale_fill_viridis_d(begin=.20, end=.60) + xlab("Gender") +
+  ggtitle("Gender by Attrition")
+```
+##Attrition is common with male employees
+
+
+#JobRole vs Attrition
+```{r}
+data %>% ggplot(aes(x=JobRole,fill=Attrition)) + geom_bar(position="fill") +
+  scale_fill_viridis_d(begin=.20, end=.60) + xlab("JobRole") +
+  ggtitle("JobRole by Attrition")
+```
+##There seems to be higher attrition rate in Sales Representative employees
+
+
+#MaritalStatus vs Attrition
+```{r}
+data %>% ggplot(aes(x=MaritalStatus,fill=Attrition)) + geom_bar(position="fill") +
+  scale_fill_viridis_d(begin=.20, end=.60) + xlab("MaritalStatus") +
+  ggtitle("MaritalStatus by Attrition")
+```
+##Attrition is  common with single employees
+
+
+#OverTime vs Attrition
+```{r}
+data %>% ggplot(aes(x=OverTime,fill=Attrition)) + geom_bar(position="fill") +
+  scale_fill_viridis_d(begin=.20, end=.60) + xlab("OverTime") +
+  ggtitle("OverTime by Attrition")
+```
+##Attrition is  common with employees who worked overtime
+
+
+
+# A look at Numerical variables
+##Age vs Attrition
+```{r}
+data %>% ggplot(aes(x=Attrition, y= Age, fill=Attrition)) + geom_boxplot() +
+  scale_fill_viridis_d() + xlab("Attrition") + ylab("Age")
+  ggtitle("Age by Attrition")
+
+```
+##It looks like Employees in their 30's have a higher attrition rate
+
+
+#DailyRate vs Attrition
+```{r}
+data %>% ggplot(aes(x=Attrition, y= DailyRate, fill=Attrition)) + geom_boxplot() +
+  scale_fill_viridis_d() + xlab("Attrition") + ylab("DailyRate")
+  ggtitle("DailyRate by Attrition")
+```
+
+
+#DistanceFromHome vs Attrition
+```{r}
+data %>% ggplot(aes(x=Attrition, y= DistanceFromHome, fill=Attrition)) + geom_boxplot() +
+  scale_fill_viridis_d() + xlab("Attrition") + ylab("DistanceFromHome")
+  ggtitle("DistanceFromHome by Attrition")
+```
+
+
+#Education vs Attrition
+```{r}
+data %>% ggplot(aes(x=Attrition, y= Education, fill=Attrition)) + geom_boxplot() +
+  scale_fill_viridis_d() + xlab("Attrition") + ylab("Education")
+  ggtitle("Education by Attrition")
+```
+
+
+#EmployeeNumber vs Attrition
+```{r}
+data %>% ggplot(aes(x=Attrition, y= EmployeeNumber, fill=Attrition)) + geom_boxplot() +
+  scale_fill_viridis_d() + xlab("Attrition") + ylab("EmployeeNumber")
+  ggtitle("EmployeeNumber by Attrition")
+```
+
+
+#EnvironmentSatisfaction vs Attrition
+```{r}
+data %>% ggplot(aes(x=EnvironmentSatisfaction,fill=Attrition)) + geom_bar(position="fill") +
+  scale_fill_viridis_d(begin=.20, end=.60) + xlab("EnvironmentSatisfaction") +
+  ggtitle("EnvironmentSatisfaction by Attrition")
+```
+
+
+#HourlyRate vs Attrition
+```{r}
+data %>% ggplot(aes(x=Attrition, y= HourlyRate, fill=Attrition)) + geom_boxplot() +
+  scale_fill_viridis_d() + xlab("Attrition") + ylab("HourlyRate")
+  ggtitle("HourlyRate by Attrition")
+```
+
+
+#JobInvolvement vs Attrition
+```{r}
+data %>% ggplot(aes(x=JobInvolvement,fill=Attrition)) + geom_bar(position="fill") +
+  scale_fill_viridis_d(begin=.20, end=.60) + xlab("JobInvolvement") +
+  ggtitle("JobInvolvement by Attrition")
+```
+
+
+#JobSatisfaction vs Attrition
+```{r}
+data %>% ggplot(aes(x=JobSatisfaction,fill=Attrition)) + geom_bar(position="fill") +
+  scale_fill_viridis_d(begin=.20, end=.60) + xlab("JobSatisfaction") +
+  ggtitle("JobSatisfaction by Attrition")
+```
+
+
+#MonthlyIncome vs Attrition
+```{r}
+data %>% ggplot(aes(x=Attrition, y= MonthlyIncome, fill=Attrition)) + geom_boxplot() +
+  scale_fill_viridis_d() + xlab("Attrition") + ylab("MonthlyIncome")
+  ggtitle("MonthlyIncome by Attrition")
+```
+
+##Attrition is likely in employees with lower monthly income
+
+
+#MonthlyRate vs Attrition
+```{r}
+
+data %>% ggplot(aes(x=Attrition, y= MonthlyRate, fill=Attrition)) + geom_boxplot() +
+  scale_fill_viridis_d() + xlab("Attrition") + ylab("MonthlyRate")
+  ggtitle("MonthlyRate by Attrition")
+```
+
+
+#NumCompaniesWorked vs Attrition
+```{r}
+data %>% ggplot(aes(x=Attrition, y= NumCompaniesWorked, fill=Attrition)) + geom_boxplot() +
+  scale_fill_viridis_d() + xlab("Attrition") + ylab("NumCompaniesWorked")
+  ggtitle("NumCompaniesWorked by Attrition")
+```
+
+
+#PercentSalaryHike vs Attrition
+```{r}
+data %>% ggplot(aes(x=Attrition, y= PercentSalaryHike, fill=Attrition)) + geom_boxplot() +
+  scale_fill_viridis_d() + xlab("Attrition") + ylab("PercentSalaryHike")
+  ggtitle("PercentSalaryHike by Attrition")
+```
+
+
+#PerformanceRating vs Attrition
+```{r}
+data %>% ggplot(aes(x=PerformanceRating,fill=Attrition)) + geom_bar(position="fill") +
+  scale_fill_viridis_d(begin=.20, end=.60) + xlab("PerformanceRating") +
+  ggtitle("PerformanceRating by Attrition")
+```
+
+
+#RelationshipSatisfaction vs Attrition
+```{r}
+data %>% ggplot(aes(x=RelationshipSatisfaction,fill=Attrition)) + geom_bar(position="fill") +
+  scale_fill_viridis_d(begin=.20, end=.60) + xlab("RelationshipSatisfaction") +
+  ggtitle("RelationshipSatisfaction by Attrition")
+```
+
+
+#StockOptionLevel vs Attrition
+```{r}
+data %>% ggplot(aes(x=StockOptionLevel,fill=Attrition)) + geom_bar(position="fill") +
+  scale_fill_viridis_d(begin=.20, end=.60) + xlab("StockOptionLevel") +
+  ggtitle("StockOptionLevel by Attrition")
+```
+
+
+#TotalWorkingYears vs Attrition
+```{r}
+data %>% ggplot(aes(x=Attrition, y= TotalWorkingYears, fill=Attrition)) + geom_boxplot() +
+  scale_fill_viridis_d() + xlab("Attrition") + ylab("TotalWorkingYears")
+  ggtitle("TotalWorkingYears by Attrition")
+```
+##There seems to be Attrition in employees with <5years
+
+
+#TrainingTimesLastYear vs Attrition
+```{r}
+data %>% ggplot(aes(x=TrainingTimesLastYear,fill=Attrition)) + geom_bar(position="fill") +
+  scale_fill_viridis_d(begin=.20, end=.60) + xlab("Training Times Last Year") +
+  ggtitle("Training Times Last Year by Attrition")
+```
+
+
+#WorkLifeBalance vs Attrition
+```{r}
+data %>% ggplot(aes(x=WorkLifeBalance,fill=Attrition)) + geom_bar(position="fill") +
+  scale_fill_viridis_d(begin=.20, end=.60) + xlab("Work Life Balance") +
+  ggtitle("Work Life Balance by Attrition")
+```
+
+
+#YearsAtCompany vs Attrition
+```{r}
+data %>% ggplot(aes(x=Attrition, y= YearsAtCompany, fill=Attrition)) + geom_boxplot() +
+  scale_fill_viridis_d() + xlab("Attrition") + ylab("Years At Company")
+  ggtitle("Years At Company by Attrition")
+```
+
+
+#YearsInCurrentRole vs Attrition
+```{r}
+
+data %>% ggplot(aes(x=Attrition, y= YearsInCurrentRole, fill=Attrition)) + geom_boxplot() +
+  scale_fill_viridis_d() + xlab("Attrition") + ylab("Years In Current Role")
+  ggtitle("Years In  Current Role by Attrition")
+```
+##Attrition is likely with employees with <5 years in current role
+
+
+#YearsSinceLastPromotion vs Attrition
+```{r}
+data %>% ggplot(aes(x=Attrition, y= YearsSinceLastPromotion, fill=Attrition)) + geom_boxplot() +
+  scale_fill_viridis_d() + xlab("Attrition") + ylab("Years Since Last Promotion")
+  ggtitle("Years Since Last Promotion by Attrition")
+```
+
+
+#YearsWithCurrManager vs Attrition
+```{r}
+data %>% ggplot(aes(x=Attrition, y= YearsWithCurrManager, fill=Attrition)) + geom_boxplot() +
+  scale_fill_viridis_d() + xlab("Attrition") + ylab("Years With Current Manager")
+  ggtitle("Years With Current Manager by Attrition")
+```
+
+
+##Lets look at T-tests for variables of interest
+```{r}
+t.test(Age~Attrition,data=data,var.equal=T)  #p-value = 9.658e-06
+t.test(Education~Attrition,data=data,var.equal=T) #p-value = 0.1451
+t.test(YearsInCurrentRole~Attrition,data=data,var.equal=T)  #p-value = 3.665e-06
+t.test(MonthlyIncome~Attrition,data=data,var.equal=T) #p-value = 4.422e-06
+t.test(StockOptionLevel~Attrition,data=data,var.equal=T) #p-value = 1.065e-05
+test = chisq.test(table(data$OverTime,data$Attrition)) #p-value = 2.333e-15
+test
+```
+
+
+
+# More EDA  #
+## Percentage of No vs Yes
+```{r}
+Perc_Att <- data %>% group_by(Attrition) %>% count()
+str(Perc_Att)
+Perc_Att$Percent <- Perc_Att$n/length(data$Age)
+```
+#730 No Attrition    140 yes Attrition
+
+
+# Let's look at some summaries overall and then of people that left the company
+```{r}
+dataSummary <- data.frame(summary(data))
+dataSummary <- na.omit(dataSummary)
+dataSummary <- dataSummary %>% separate(Freq, into = c("Variable", "Value"), sep = ":")
+dataSummary <- dataSummary[,-1]
+dataSummary <- dataSummary %>% unite(Var, Var2, Variable, sep = " ")
+view(dataSummary)
+```
+
+
+#Lets look at interactions
+##Monthly Income by Job Role
+```{r}
+MonthlyIncome <- data %>% group_by() %>%  
+  summarize(count = n()) %>% 
+  mutate(pct = count/sum(count)) 
+means <- aggregate(MonthlyIncome~JobRole, data, mean)
+data %>%
+  ggplot(aes(x=JobRole,y=MonthlyIncome)) +
+  geom_boxplot(aes(color = JobRole), show.legend = FALSE) +
+  labs(title = "Monthly Incomes by JobRole",
+       y="Monthly Income",
+       x="JobRole") +
+  theme_classic()
+```
+#Sales Representatives have the lowest Monthly Income
+#Directors and Managers have the highest Monthly Income
+
+
+#Monthly Income by Joblevel
+```{r}
+data %>% ggplot(aes(x=MonthlyIncome, y=JobLevel,color=MonthlyIncome)) + 
+  geom_point(position="jitter") + geom_smooth(method="lm") + 
+  ggtitle("Monthly Income vs. Job Level") + xlab("Monthly Income") +
+  ylab("Job Level") + scale_color_viridis(option="D",name="Monthly Income") + 
+  facet_wrap(~JobRole)
+```
+
+
+#JobTrends
+```{r}
+data %>% ggplot(aes(x=JobRole, y= TotalWorkingYears, fill=JobRole)) + geom_boxplot() +
+  scale_fill_viridis_d() + xlab("JobRole") + ylab("TotalWorkingYears")
+  ggtitle("Job Roles by years")
+```
+#Sales Representatives have the lowest total working years <5years
+
+
+
+#Prepare the datasets for Model prediction
+## Categorical Variables
+```{r}
+dataDF_cat <- data[,c(3,4,6,8,9,12,13,15:19,24,26,27,29,31,32)]
+str(dataDF_cat)
+dataDF_cat <- dataDF_cat %>% dplyr::mutate_if(is.character, as.factor)
+dataDF_cat <- dataDF_cat %>% dplyr::mutate_if(is.integer, as.factor)
+dataDF_cat$JobRole <- case_when(
+  dataDF_cat$JobRole == "Healthcare Representative" ~ "Healthcare Rep",
+  dataDF_cat$JobRole == "Human Resources" ~ "HR",
+  dataDF_cat$JobRole == "Laboratory Technician" ~ "Lab Tech",
+  dataDF_cat$JobRole == "Manufacturing Director" ~ "Manufact Director",
+  dataDF_cat$JobRole == "Research Director" ~ "Res. Director",
+  dataDF_cat$JobRole == "Research Scientist" ~ "Res. Scientist",
+  dataDF_cat$JobRole == "Sales Executive" ~ "Sales Exec",
+  dataDF_cat$JobRole == "Sales Representative" ~ "Sales Rep",
+  dataDF_cat$JobRole == "Manager" ~ "Manager")
+str(dataDF_cat)
+```
+
+# numeric variables
+```{r}
+dataDF_num <- data[,c(3,2,5,7,14,20,21,22,25,30,33:36)]
+str(dataDF_num)
+dataDF_num[,c(2:14)] <- sapply(dataDF_num[,c(2:14)], as.numeric)
+dataDF_num$Attrition <- as.factor(dataDF_num$Attrition)
+str(dataDF_num)
+```
+
+#merge the datasets
+```{r}
+data_merge <- cbind(dataDF_cat, dataDF_num)
+str(data_merge)
+names(data_merge)
+```
+
+
+#Model prediction using NaiveBayes
+```{r}
+Model <- data_merge[,c("Attrition", "Department", "JobInvolvement","JobLevel","JobRole","JobSatisfaction","MaritalStatus","OverTime","StockOptionLevel","WorkLifeBalance", "Age","MonthlyIncome","NumCompaniesWorked","TotalWorkingYears","YearsAtCompany","YearsInCurrentRole","YearsWithCurrManager")]
+iterations = 200
+masterAcc = matrix(nrow = iterations)
+masterSen <- matrix(nrow = iterations)
+masterSpec <- matrix(nrow = iterations)
+splitPerc = .7 #Training / Test split Percentage
+for(j in 1:iterations)
+{ trainInd = createDataPartition(Model$Attrition, p = splitPerc, list = FALSE)
+  train = Model[trainInd,]
+  test = Model[-trainInd,]
+  model = naiveBayes(train[,-1], train[,1], laplace = 0)
+  table(predict(model,test[,-1]), test[,1])
+  CM = confusionMatrix(table(predict(model,test[,-1]),test[,1]))
+  masterAcc[j]  <-  CM$overall[1]
+  masterSen[j]  <-  CM$byClass[1]
+  masterSpec[j] <-  CM$byClass[2]
+}
+MeanAcc   <-  colMeans(masterAcc)
+MeanSen   <-  colMeans(masterSen)
+MeanSpec  <-  colMeans(masterSpec)
+MeanAcc  #0.8095
+MeanSen  #0.8499
+MeanSpec #0.5985
+CM
+```
+
+
+#Validation
+##Read the Validation data set
+```{r}
+Compset<- read.csv(file.choose(), header= TRUE)
+```
+
+#Lets look at the dataset
+```{r}
+head(Compset)
+str(Compset)
+```
+
+
+#Change as a factor and merge the datasets
+## Categorical Variable
+## Numerical Variable 
+```{r}
+Comp_cat <- Compset[,c(3,5,7,8,11,12,14:18,23,25,26,28,30,31)]
+str(Comp_cat)
+Comp_cat <- Comp_cat %>% dplyr::mutate_if(is.character, as.factor)
+Comp_cat <- Comp_cat %>% dplyr::mutate_if(is.integer, as.factor)
+str(Comp_cat)
+
+Comp_num <- Compset[,c(2,4,6,13,19,20,21,24,29,32:35)]
+str(Comp_num)
+Comp_num[,c(1:13)] <- sapply(Comp_num[,c(1:13)], as.numeric)
+str(Comp_num)
+compSetmerge <- cbind(Comp_cat, Comp_num)
+```
+
+```{r}
+Comp_set <- compSetmerge[,c("Department","JobInvolvement", "JobLevel","JobRole","JobSatisfaction", "MaritalStatus","OverTime", "StockOptionLevel","WorkLifeBalance","Age","MonthlyIncome", "NumCompaniesWorked","TotalWorkingYears","YearsAtCompany","YearsInCurrentRole","YearsWithCurrManager")]
+```
+
+
+#New Model to predict Attrition
+```{r}
+Predict_Attrition <- as.data.frame(predict(model, compSetmerge))
+Predict_Attrition <- cbind(Compset$ID, Predict_Attrition)
+colnames(Predict_Attrition) <- c("Model", "Attrition")
+head(Predict_Attrition)
+write.csv(Predict_Attrition , "Case2PredictionsOkpara Attrition.csv")
+```
+
+
+
+# Regression Model to Predict Monthly Income
+```{r}
+Modelfit = lm(MonthlyIncome~JobLevel+JobRole+TotalWorkingYears,data=data_merge)
+summary(Modelfit)
+numMSPEs = 1000
+MSPEHolderModel3 = numeric(numMSPEs)
+for (i in 1:numMSPEs)
+{
+  TrainObs = sample(seq(1,dim(data_merge)[1]),round(.75*dim(data_merge)[1]),replace = FALSE)
+  data_mergeTrain = data_merge[TrainObs,]
+  data_mergeTest = data_merge[-TrainObs,]
+  
+  Model_fit = lm(MonthlyIncome~JobLevel+JobRole+TotalWorkingYears,data=data_mergeTrain)
+  Model_Preds = predict(Model_fit, newdata = data_mergeTest)
+  MSPE = mean((data_mergeTest$MonthlyIncome - Model_Preds)^2)
+  MSPEHolderModel3[i] = MSPE
+}
+sqrt(mean(MSPEHolderModel3))
+```
+#RMSE 1017.45
+
+#Validation
+##Read the Validation data set
+```{r}
+
+Salaryset<- read.csv(file.choose(), header= TRUE)
+```
+
+```{r}
+head(Salaryset)
+str(Salaryset)
+```
+
+#Change as a factor and merge the variable sets
+## Categorical variables
+## Numerical Variables
+```{r}
+Sal_cat <- Salaryset[,c(3,5,7,8,11,12,14:18,23,25,26,28,30,31)]
+str(Sal_cat)
+Sal_cat <- Sal_cat %>% dplyr::mutate_if(is.character, as.factor)
+Sal_cat <- Sal_cat %>% dplyr::mutate_if(is.integer, as.factor)
+Sal_cat$JobRole <- case_when(
+  Sal_cat$JobRole == "Healthcare Representative" ~ "Healthcare Rep",
+  Sal_cat$JobRole == "Human Resources" ~ "HR",
+  Sal_cat$JobRole == "Laboratory Technician" ~ "Lab Tech",
+  Sal_cat$JobRole == "Manufacturing Director" ~ "Manufact Director",
+  Sal_cat$JobRole == "Research Director" ~ "Res. Director",
+  Sal_cat$JobRole == "Research Scientist" ~ "Res. Scientist",
+  Sal_cat$JobRole == "Sales Executive" ~ "Sales Exec",
+  Sal_cat$JobRole == "Sales Representative" ~ "Sales Rep",
+  Sal_cat$JobRole == "Manager" ~ "Manager")
+str(Sal_cat)
+
+Sal_num <- Salaryset[,c(2,4,6,13,19,20,21,24,29,32:35)]
+str(Sal_num)
+Sal_num[,c(1:13)] <- sapply(Sal_num[,c(1:13)], as.numeric)
+str(Sal_num)
+Salarysetmerge <- cbind(Sal_cat, Sal_num)
+```
+
+#Remove unwanted variables
+```{r}
+Salary_set <- Salarysetmerge[,c("Department","JobInvolvement", "JobLevel","JobRole","JobSatisfaction", "MaritalStatus","OverTime", "StockOptionLevel","WorkLifeBalance","Age","Attrition", "NumCompaniesWorked","TotalWorkingYears","YearsAtCompany","YearsInCurrentRole","YearsWithCurrManager")]
+```
+
+```{r}
+Salary_Pred <- as.data.frame(predict(Modelfit, Salarysetmerge))
+Salary_Pred <- cbind(Salaryset$ID, Salary_Pred)
+colnames(Salary_Pred) <- c("ID", "MonthlyIncome")
+head(Salary_Pred)
+write.csv(Salary_Pred , "Case2PredictionsOkpara Salary.csv")
+```
